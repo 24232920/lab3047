@@ -39,9 +39,9 @@
 
     <script>
         // an async function to fetch bookings and metadata from the backend
-        async function getBookings(page, perPage) {
+        async function getBookings(page, perPage, email) {
             // fetch the bookings
-            const response = await fetch(`/api/bookings?page=${page}&perPage=${perPage}`);
+            const response = await fetch(`/api/bookings?page=${page}&perPage=${perPage}&email=${email}`);
             // convert the response to json
             const json = await response.json();
             // return the json
@@ -87,10 +87,10 @@
         }
 
         // an async function to render the page
-        async function renderPage(page, perPage) {
+        async function renderPage(page, perPage, email) {
 
             // get the bookings data
-            const data = await getBookings(page, perPage);
+            const data = await getBookings(page, perPage, email);
 
             // render the bookings
             await renderBookings(data.bookings);
@@ -100,7 +100,7 @@
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        renderPage(1, urlParams.get("perPage"))
+        renderPage(1, urlParams.get("perPage"), urlParams.get('email') || '')
         
     </script>
 

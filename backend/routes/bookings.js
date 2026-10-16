@@ -59,4 +59,43 @@ router.get('/:id', async function (req, res) {
     }
 });
 
+// Update a single Booking
+router.patch('/:id', async function (req, res) {
+    const db = await connectToDB();
+    try {
+        req.body.numTickets = parseInt(req.body.numTickets);
+        req.body.terms = req.body.terms ? true : false;
+        req.body.superhero = req.body.superhero || "";
+        req.body.modified_at = new Date();
+
+        let result = await db.collection("bookings").updateOne({ _id: new ObjectId(req.params.id) }, { $set: req.body });
+
+        if (result.modifiedCount > 0) {
+            res.status(200).json({ message: "Booking updated" });
+        } else {
+            res.status(404).json({ message: "Booking not found" });
+        }
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// Delete a single Booking
+router.delete('/:id', async function (req, res) {
+    const db = await connectToDB();
+    try {
+        let result = await db.collection("bookings").deleteOne({ _id: new ObjectId(req.params.id) });
+
+        if (result.deletedCount > 0) {
+            res.status(200).json({ message: "Booking deleted" });
+        } else {
+            res.status(404).json({ message: "Booking not found" });
+        }
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+
+
 module.exports = router;

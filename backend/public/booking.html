@@ -121,7 +121,77 @@
                 superheroElem.disabled = true;
             }
         }
+
+        // A function to fetch a booking
+        async function getBooking(id) {
+            // fetch the booking
+            const response = await fetch(`/api/bookings/${id}`);
+            // convert the response to json
+            const json = await response.json();
+            // return the json
+            return json;
+        }
+
+        // A function to render a booking
+        function renderBooking(booking) {
+            document.querySelector("#inputEmail3").value = booking.email;
+            document.querySelector("#inputPassword3").value = booking.numTickets;
+            document.querySelector(`option[value='${booking.team}']`).selected = true;
+            teamSelected(booking.team)
+            document.querySelector(`option[value='${booking.superhero}']`).selected = true;
+            document.querySelector(`input[value='${booking.payment}']`).checked = true;
+            document.querySelector("#gridCheck1").checked = booking.terms;
+        }
+
+        // A function to render the booking
+        async function render() {
+            // get the id from the url
+            const urlParams = new URLSearchParams(window.location.search);
+            let id = urlParams.get("id")
+            // get the booking
+            const booking = await getBooking(id);
+            // render the booking
+            renderBooking(booking);
+        }
+
+        render()
+
     </script>
+
+    <script>
+        // A function to update a booking with www-form-urlencoded data
+        async function updateBooking(id, booking) {
+
+            const response = await fetch(`/api/bookings/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams(booking)
+            });
+            // convert the response to json
+            const json = await response.json();
+            // return the json
+            return json;
+        }
+
+        // A function to handle the form submission and display the response
+        async function handleSubmit(event) {
+            // prevent the default behaviour
+            event.preventDefault();
+            // get the id from the url
+            const urlParams = new URLSearchParams(window.location.search);
+            let id = urlParams.get("id")
+            // get the form data
+            const formData = new FormData(event.target);
+            // update the booking
+            const updatedBooking = await updateBooking(id, formData);
+            // display the response
+            alert(JSON.stringify(updatedBooking));
+        }
+
+    </script>
+
 </body>
 
 </html>

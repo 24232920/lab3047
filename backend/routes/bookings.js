@@ -60,15 +60,17 @@ router.get('/:id', async function (req, res) {
 });
 
 // Update a single Booking
-router.patch('/:id', async function (req, res) {
+router.put('/:id', async function (req, res) {
     const db = await connectToDB();
     try {
-        req.body.numTickets = parseInt(req.body.numTickets);
-        req.body.terms = req.body.terms ? true : false;
-        req.body.superhero = req.body.superhero || "";
+        if (req.body._id && req.body._id !== req.params.id) {
+            throw new Error("ID in body does not match ID in URL");
+        }
+
+        req.body._id = new ObjectId(req.params.id);
         req.body.modified_at = new Date();
 
-        let result = await db.collection("bookings").updateOne({ _id: new ObjectId(req.params.id) }, { $set: req.body });
+        let result = await db.collection("bookings").replaceOne({ _id: req.body._id }, req.body );
 
         if (result.modifiedCount > 0) {
             res.status(200).json({ message: "Booking updated" });

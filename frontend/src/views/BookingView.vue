@@ -1,6 +1,7 @@
 <template>
     <main>
-        <form class="container my-5" @submit.prevent="submitBooking">
+        <form class="container my-5" @submit.prevent="submitBooking" v-if="route.name != 'view-booking'">
+            
             <div class="row mb-3">
                 <label for="inputEmail3" class="col-sm-2 col-form-label">Email</label>
                 <div class="col-sm-10">
@@ -65,15 +66,25 @@
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Buy Tickets</button>
+            <button type="submit" class="btn btn-primary" v-if="route.name == 'booking-create'">Buy Tickets</button>
+            <button type="submit" class="btn btn-primary" v-if="route.name == 'edit-booking'">Update</button>
+            <button type="button" class="btn btn-danger" v-if="route.name == 'edit-booking'" @click="deleteBooking">Delete Booking</button>
         </form>
+        <div v-if="route.name == 'view-booking'">
+            <h1>{{ booking.email }}</h1>
+            <p>Number of Tickets: {{ booking.numTickets }}</p>
+            <p>Payment Method: {{ booking.payment }}</p>
+            <p>Favourite Team: {{ booking.team }}</p>
+            <p>Favourite Hero: {{ booking.superhero }}</p>
+             <p>Terms and Conditions: {{ booking.terms }}</p>
+        </div>
     </main>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute } from "vue-router";
-const route = useRoute();
+import { useRoute, useRouter } from "vue-router";const route = useRoute();
+const router = useRouter();
 
 const booking = ref({
     email: '',
@@ -106,13 +117,43 @@ watch(() => booking.value.team, (newTeam) => {
 
 const submitBooking = async function () {
     // post the booking to the backend
-    const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(booking.value)
-    });
+    var url = '/api/bookings';
+    var method = 'POST';
+
+    if (route.name == 'edit-booking') {
+        url = url + '/' + booking.value._id;
+        method = 'PUT';
+    }
+
+    // submit the booking to the backend with error handling
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(booking.value)
+        });
+
+        const json = await response.json();
+
+        // If the HTTP status indicates failure, throw an error with the server message
+        if (!response.ok) {
+            throw new Error(json.message || 'Failed to save booking');
+        }
+
+        // Success path – you can keep a console log for debugging and replace the alert
+        // with a UI notification later.
+        console.log('Booking saved:', json);
+        alert(JSON.stringify(json));
+    } catch (err) {
+
+    // Log the error for developers
+    console.error('Error while submitting booking:', err);
+
+    // Show a user‑friendly message; replace with a toast or modal in a real app
+    alert(`Booking could not be saved: ${err.message}`);
+}
     // convert the response to json
     const json = await response.json();
     // log the json
@@ -146,4 +187,24 @@ const getBooking = async function () {
         alert(`Could not load booking: ${err.message}`);
     }
 }
+const deleteBooking = async function () {
+    // post the booking to the backend
+    const response = await fetch('/api/bookings/' + booking.value._id, {
+        method: 'DELETE'
+    });
+    // convert the response to json
+    const json = await response.json();
+    // log the json
+    console.log(json);
+    // alert the user
+    alert(JSON.stringify(json));
+    // redirect to the home page
+    router.push('/');
+}
+onMounted(async () => {
+    // if there is an id in the route
+    if (route.params.id) {
+        await getBooking();
+    }
+});
 </script>

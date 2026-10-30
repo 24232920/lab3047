@@ -20,7 +20,20 @@ router.get('/', async function (req, res) {
         let perPage = parseInt(req.query.perPage) || 10;
         let skip = (page - 1) * perPage;
 
-        let result = await db.collection("bookings").find(query).skip(skip).limit(perPage).toArray();
+        // sort by sort_by query parameter
+        let sort = {};
+        if (req.query.sort_by) {
+
+            // split the sort_by into an array
+            let sortBy = req.query.sort_by.split(".");
+
+            // check if the first element is a valid field
+            if (sortBy.length > 1 && ["numTickets"].includes(sortBy[0])) {
+                sort[sortBy[0]] = sortBy[1] == "desc" ? -1 : 1;
+            }
+        }
+
+        let result = await db.collection("bookings").find(query).sort(sort).skip(skip).limit(perPage).toArray();
         let total = await db.collection("bookings").countDocuments(query);
 
         res.json({ bookings: result, total: total, page: page, perPage: perPage });
@@ -70,7 +83,7 @@ router.put('/:id', async function (req, res) {
         req.body._id = new ObjectId(req.params.id);
         req.body.modified_at = new Date();
 
-        let result = await db.collection("bookings").replaceOne({ _id: req.body._id }, req.body );
+        let result = await db.collection("bookings").replaceOne({ _id: req.body._id }, req.body);
 
         if (result.modifiedCount > 0) {
             res.status(200).json({ message: "Booking updated" });
@@ -98,6 +111,21 @@ router.delete('/:id', async function (req, res) {
     }
 });
 
+// Get the total number of bookings per superhero
+router.get('/stats/superhero', async function (req, res) {
+    const db = await connectToDB();
+    try {
+        let result = await db.collection("bookings").aggregate([
+            // non null superhero
+            { $match: { superhero: { $ne: null } } },
+            { $match: { superhero: { $exists: true, $ne: "" } } },
+            { $group: { _id: "$superhero", total: { $sum: 1 } } }
+        ]).toArray();
 
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
 
 module.exports = router;

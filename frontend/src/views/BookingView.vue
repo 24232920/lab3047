@@ -84,6 +84,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from "vue-router";const route = useRoute();
+import {apiRequest} from "../services/api"
 const router = useRouter();
 
 const booking = ref({
@@ -127,33 +128,13 @@ const submitBooking = async function () {
 
     // submit the booking to the backend with error handling
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(booking.value)
-        });
-
-        const json = await response.json();
-
-        // If the HTTP status indicates failure, throw an error with the server message
-        if (!response.ok) {
-            throw new Error(json.message || 'Failed to save booking');
-        }
-
-        // Success path – you can keep a console log for debugging and replace the alert
-        // with a UI notification later.
-        console.log('Booking saved:', json);
+        const json = await apiRequest(url, method, booking.value);
         alert(JSON.stringify(json));
     } catch (err) {
-
-    // Log the error for developers
-    console.error('Error while submitting booking:', err);
-
     // Show a user‑friendly message; replace with a toast or modal in a real app
     alert(`Booking could not be saved: ${err.message}`);
-}
+    }
+    //might be problem!!
     // convert the response to json
     const json = await response.json();
     // log the json
@@ -166,36 +147,17 @@ const submitBooking = async function () {
 const getBooking = async function () {
     try {
         // request the booking by ID
-        const response = await fetch('/api/bookings/' + route.params.id);
-
-        // parse the JSON payload
-        const json = await response.json();
-
-        // if the HTTP status is not OK, throw an error with the server‑provided message
-        if (!response.ok) {
-            throw new Error(json.message || 'Failed to retrieve booking');
-        }
-
-        // success – log and assign the retrieved data
-        console.log('Fetched booking:', json);
+        const json = await apiRequest('/api/bookings/' + route.params.id);
+        
         booking.value = json;
     } catch (err) {
-        // log the error for debugging
-        console.error('Error while fetching booking:', err);
-
         // inform the user (replace with a toast or modal in a real app)
         alert(`Could not load booking: ${err.message}`);
     }
 }
 const deleteBooking = async function () {
     // post the booking to the backend
-    const response = await fetch('/api/bookings/' + booking.value._id, {
-        method: 'DELETE'
-    });
-    // convert the response to json
-    const json = await response.json();
-    // log the json
-    console.log(json);
+    const json = await apiRequest('/api/bookings/' + booking.value._id, 'DELETE');
     // alert the user
     alert(JSON.stringify(json));
     // redirect to the home page

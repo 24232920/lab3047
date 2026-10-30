@@ -115,15 +115,22 @@ router.delete('/:id', async function (req, res) {
 router.get('/stats/superhero', async function (req, res) {
     const db = await connectToDB();
     try {
-        let result = await db.collection("bookings").aggregate([
-            // non null superhero
-            { $match: { superhero: { $ne: null } } },
-            { $match: { superhero: { $exists: true, $ne: "" } } },
-            { $group: { _id: "$superhero", total: { $sum: 1 } } }
-        ]).toArray();
+    let pipelines = [];
 
-        res.json(result);
-    } catch (err) {
+    if (req.query.team) {
+        pipelines.push({ $match: { team: req.query.team } });
+    }
+
+    pipelines = pipelines.concat([
+        // non null superhero
+        { $match: { superhero: { $ne: null } } },
+        { $match: { superhero: { $exists: true, $ne: "" } } },
+        { $group: { _id: "$superhero", total: { $sum: 1 } } }
+    ]);
+
+    let result = await db.collection("bookings").aggregate(pipelines).toArray();
+    res.json(result);
+} catch (err) {
         res.status(400).json({ message: err.message });
     }
 });

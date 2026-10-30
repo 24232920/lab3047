@@ -4,6 +4,8 @@ import DonutChart from '../components/DonutChart.vue'
 
 <template>
     <main>
-        <DonutChart />
+        <DonutChart team="" />
+        <DonutChart team="Avengers" />
+        <DonutChart team="JLA" />
     </main>
 </template>

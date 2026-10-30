@@ -10,7 +10,7 @@ const options = ref({});
 const series = ref([]);
 
 onMounted(async () => {
-    var json = await apiRequest(`/api/bookings/stats/superhero?team=${props.team}`);    
+    const json = await apiRequest(`/api/bookings/stats/superhero?team=${props.team}`);    
     options.value = {
         labels: json.map((item) => item._id),
         title: { text: props.team || "All Teams" }
